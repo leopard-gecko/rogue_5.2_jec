@@ -1,0 +1,90 @@
+name: Build Rogue 5.2 JEC
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, name: linux-x64 }
+          - { os: ubuntu-24.04-arm, name: linux-arm64 }
+          - { os: macos-15-intel, name: macos-intel }
+          - { os: macos-15, name: macos-arm64 }
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libncurses-dev
+
+      - name: Configure and build both editions
+        run: |
+          sh ./configure
+          make
+          mkdir -p dist
+          cp rogue dist/
+          make clean
+          make PROGRAM=rogue_original SAVEFILE=rogue.save SCOREFILE=rogue.scr original
+          cp rogue_original dist/
+
+      - name: Upload Unix binaries
+        uses: actions/upload-artifact@v6
+        with:
+          name: rogue52-${{ matrix.name }}
+          path: dist/
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2025
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Configure Git line endings
+        shell: pwsh
+        run: git config --global core.autocrlf input
+
+      - uses: actions/checkout@v6
+
+      - name: Set up MSYS2 UCRT64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            make
+            zip
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-binutils
+            mingw-w64-ucrt-x86_64-pdcurses
+
+      - name: Build Windows distribution
+        run: |
+          make dist.win
+          mkdir -p dist
+          cp rogue52.exe rogue52_original.exe rogue52_004-windows.zip dist/
+          objdump -p rogue52.exe | grep 'DLL Name:' || true
+          objdump -p rogue52_original.exe | grep 'DLL Name:' || true
+
+      - name: Upload Windows binaries and ZIP
+        uses: actions/upload-artifact@v6
+        with:
+          name: rogue52-windows-x64
+          path: dist/
+          if-no-files-found: error
