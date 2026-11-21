@@ -90,3 +90,43 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
+
+====================================================================
+ROGUE 5.2 JEC: ADDITIONAL CONTRIBUTIONS
+====================================================================
+
+Rogue 5.2 JEC is a modified edition of Rogue 5.2.
+
+Copyright (c) 2026 leopardgecko
+(for original, copyrightable contributions by leopardgecko only).
+
+JEC modifications include Japanese localization, Japanese/English
+language switching, Unicode and emoji support, color display,
+modern operating-system support, user-interface improvements,
+and the Windows executable icon and related resources.
+
+To the extent that leopardgecko owns copyright in these original
+contributions, they are provided under the same three-clause BSD
+license terms reproduced above.
+
+These additions do not alter the copyrights or license conditions
+of the original Rogue or any third-party components.
+
+--------------------------------------------------------------------
+
+Rogue 5.2 JEC 追加・変更部分について
+
+Rogue 5.2 JECは、Rogue 5.2を基にした改訂版です。
+
+Copyright (c) 2026 leopardgecko
+（leopardgeckoが独自に制作し、著作権が成立する部分に限ります。）
+
+JEC版では、日本語化、日英切り替え、Unicode・絵文字対応、
+カラー表示、現代のOSへの対応、表示・操作の改善、
+Windows版のアイコンと関連リソースなどを追加しています。
+
+leopardgeckoが権利を有する独自の追加・変更部分については、
+本ファイルの前半に収録されたBSD 3-Clauseと同じ条件で提供します。
+
+これらの追加・変更は、オリジナルRogueや第三者のコード・素材に
+適用される著作権およびライセンス条件を変更するものではありません。
