@@ -252,6 +252,13 @@ void genocide(void)
 	if (mp->t_type == c)
 	    remove_monster(&mp->t_pos, mp, FALSE);
     }
+    /* Genocide must release the player held by a violet fungus. */
+    if (c == 'F')
+    {
+	player.t_flags &= ~ISHELD;
+	fung_hit = 0;
+	strcpy(monsters['F'-'A'].m_stats.s_dmg, "000d0");
+    }
     for (i = 0; i < 26; i++)
 	if (lvl_mons[i] == c)
 	{
