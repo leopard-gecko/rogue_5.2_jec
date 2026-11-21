@@ -1,0 +1,248 @@
+#!/bin/sh
+# Simple configure script for Rogue 5.2 macOS/Linux port.
+# It detects a usable C compiler and curses library, then writes config.mk.
+
+set -u
+
+prog="rogue"
+savedir="."
+filedir=""
+savefile=""
+scorefile=""
+savedir_set=no
+savefile_set=no
+scorefile_set=no
+filedir_set=no
+enable_wizard=no
+default_language=0
+prefix="/usr/local"
+bindir=""
+mandir=""
+docdir=""
+datarootdir=""
+cc_in="${CC:-}"
+cflags_in="${CFLAGS:-}"
+ldflags_in="${LDFLAGS:-}"
+crlib_in=""
+
+usage() {
+    cat <<EOF
+Usage: ./configure [OPTIONS]
+
+Build options:
+  --program=NAME       executable name (default: rogue)
+  --savedir=DIR             default save directory (default: current directory)
+  --file-dir=DIR            directory for save and score files
+  --savefile=PATH           default save file name or path (default: NAME.save)
+  --scorefile=PATH          score file name or path (default: NAME.scr)
+  --enable-wizardmode       build with -DWIZARD enabled
+  --disable-wizardmode      build without wizard mode (default)
+  --default-language=LANG   default language: auto, ja, or en (default: auto)
+  --cc=CC                   C compiler to use
+  --cflags=FLAGS            C compiler flags (default: -O2 -std=gnu89)
+  --ldflags=FLAGS           linker flags
+  --curses-lib=LIBS         curses library flags, e.g. -lncursesw
+  --prefix=DIR              installation prefix (default: /usr/local)
+  --bindir=DIR              program install directory (default: PREFIX/bin)
+  --mandir=DIR              man-page install directory (default: PREFIX/share/man)
+  --docdir=DIR              document install directory (default: PREFIX/share/doc/NAME)
+  --help                    show this help
+
+Examples:
+  ./configure
+  ./configure --program=rogue52
+  ./configure --program=rogue52 --savedir=.
+  ./configure --program=rogue52 --file-dir=.
+  ./configure --program=rogue52 --savedir='~/Documents'
+  ./configure --program=rogue52 --default-language=ja
+  ./configure --program=rogue52 --enable-wizardmode
+EOF
+}
+
+for opt in "$@"; do
+    case "$opt" in
+        --help|-h) usage; exit 0 ;;
+        --program=*) prog=${opt#*=} ;;
+        --savedir=*) savedir=${opt#*=}; savedir_set=yes ;;
+        --file-dir=*) filedir=${opt#*=}; filedir_set=yes ;;
+        --savefile=*) savefile=${opt#*=}; savefile_set=yes ;;
+        --scorefile=*) scorefile=${opt#*=}; scorefile_set=yes ;;
+        --lockfile=*) echo "configure: warning: --lockfile is obsolete (score file uses OS locks)" >&2 ;;
+        --enable-wizardmode) enable_wizard=yes ;;
+        --disable-wizardmode) enable_wizard=no ;;
+        --default-language=*)
+            case ${opt#*=} in
+                auto|AUTO|0) default_language=0 ;;
+                ja|JA|japanese|Japanese|1) default_language=1 ;;
+                en|EN|english|English|2) default_language=2 ;;
+                *) echo "configure: invalid default language: ${opt#*=}" >&2; exit 1 ;;
+            esac ;;
+        --cc=*) cc_in=${opt#*=} ;;
+        --cflags=*) cflags_in=${opt#*=} ;;
+        --ldflags=*) ldflags_in=${opt#*=} ;;
+        --curses-lib=*) crlib_in=${opt#*=} ;;
+        --prefix=*) prefix=${opt#*=} ;;
+        --bindir=*) bindir=${opt#*=} ;;
+        --mandir=*) mandir=${opt#*=} ;;
+        --docdir=*) docdir=${opt#*=} ;;
+        *) echo "configure: unknown option: $opt" >&2; usage >&2; exit 1 ;;
+    esac
+done
+
+if [ -z "$prog" ]; then
+    echo "configure: --program must not be empty" >&2
+    exit 1
+fi
+
+
+if [ -z "$bindir" ]; then bindir='$(prefix)/bin'; fi
+if [ -z "$datarootdir" ]; then datarootdir='$(prefix)/share'; fi
+if [ -z "$mandir" ]; then mandir='$(datarootdir)/man'; fi
+if [ -z "$docdir" ]; then docdir='$(datarootdir)/doc/$(PROG)'; fi
+path_join() {
+    case "$1" in
+        "") printf '%s' "$2" ;;
+        */) printf '%s%s' "$1" "$2" ;;
+        *) printf '%s/%s' "$1" "$2" ;;
+    esac
+}
+
+expand_config_tilde() {
+    case "$1" in
+        '~') printf '%s' "${HOME:-$1}" ;;
+        '~/'*) printf '%s/%s' "${HOME:-~}" "${1#\~/}" ;;
+        *) printf '%s' "$1" ;;
+    esac
+}
+
+if [ "$filedir_set" = yes ]; then
+    if [ "$savedir_set" = no ]; then
+        savedir="$filedir"
+    fi
+    expanded_filedir=$(expand_config_tilde "$filedir")
+    if [ "$scorefile_set" = no ]; then
+        scorefile=$(path_join "$expanded_filedir" "$prog.scr")
+    fi
+fi
+
+if [ -z "$savefile" ]; then savefile="$prog.save"; fi
+if [ -z "$scorefile" ]; then scorefile="$prog.scr"; fi
+
+log=config.log
+: > "$log"
+echo "configure arguments: $*" >> "$log"
+
+try_cc() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+if [ -n "$cc_in" ]; then
+    CC_CHOSEN=$cc_in
+elif try_cc cc; then
+    CC_CHOSEN=cc
+elif try_cc clang; then
+    CC_CHOSEN=clang
+elif try_cc gcc; then
+    CC_CHOSEN=gcc
+else
+    echo "configure: no C compiler found (tried cc, clang, gcc)" >&2
+    exit 1
+fi
+
+CFLAGS_CHOSEN=${cflags_in:-"-O2 -std=gnu89"}
+LDFLAGS_CHOSEN=${ldflags_in:-""}
+
+cat > conftest.c <<'EOF'
+#include <curses.h>
+int main(void) { initscr(); endwin(); return 0; }
+EOF
+
+try_link() {
+    libs=$1
+    echo "$CC_CHOSEN $CFLAGS_CHOSEN $LDFLAGS_CHOSEN conftest.c $libs -o conftest" >> "$log"
+    $CC_CHOSEN $CFLAGS_CHOSEN $LDFLAGS_CHOSEN conftest.c $libs -o conftest >> "$log" 2>&1
+}
+
+if [ -n "$crlib_in" ]; then
+    if try_link "$crlib_in"; then
+        CRLIB_CHOSEN=$crlib_in
+    else
+        echo "configure: requested curses library does not link: $crlib_in" >&2
+        echo "See config.log for details." >&2
+        exit 1
+    fi
+else
+    CRLIB_CHOSEN=""
+    for libs in "-lncursesw" "-lncurses" "-lcurses"; do
+        if try_link "$libs"; then
+            CRLIB_CHOSEN=$libs
+            break
+        fi
+    done
+    if [ -z "$CRLIB_CHOSEN" ]; then
+        echo "configure: could not find a usable curses library" >&2
+        echo "Install ncurses development files, for example libncurses-dev on Debian/Ubuntu." >&2
+        echo "See config.log for details." >&2
+        exit 1
+    fi
+fi
+
+extra_cppflags=""
+if [ "$enable_wizard" = yes ]; then
+    extra_cppflags="-DWIZARD"
+fi
+
+quote_make() {
+    # Keep simple Makefile assignments readable. Spaces in paths are not supported.
+    printf '%s' "$1" | sed 's/[#]/\\#/g'
+}
+
+cat > config.mk <<EOF
+# Generated by ./configure.  Edit configure options instead of this file.
+PREFIX = $(quote_make "$prefix")
+prefix = $(quote_make "$prefix")
+bindir = $(quote_make "$bindir")
+datarootdir = $(quote_make "$datarootdir")
+mandir = $(quote_make "$mandir")
+docdir = $(quote_make "$docdir")
+CC = $(quote_make "$CC_CHOSEN")
+CFLAGS = $(quote_make "$CFLAGS_CHOSEN")
+LDFLAGS = $(quote_make "$LDFLAGS_CHOSEN")
+CRLIB = $(quote_make "$CRLIB_CHOSEN")
+PROG = $(quote_make "$prog")
+SAVEDIR = $(quote_make "$savedir")
+FILEDIR = $(quote_make "$filedir")
+SAVEFILE = $(quote_make "$savefile")
+SCOREFILE = $(quote_make "$scorefile")
+DEFAULT_LANGUAGE = $(quote_make "$default_language")
+EXTRA_CPPFLAGS = $(quote_make "$extra_cppflags")
+EOF
+
+rm -f conftest conftest.c conftest.o conftest.err
+cat > config.status <<EOF
+configured
+EOF
+
+echo "Configuration complete."
+echo "  CC:        $CC_CHOSEN"
+echo "  CFLAGS:    $CFLAGS_CHOSEN"
+echo "  LDFLAGS:   $LDFLAGS_CHOSEN"
+echo "  curses:    $CRLIB_CHOSEN"
+echo "  program:   $prog"
+echo "  file-dir:  ${filedir:-'(not set)'}"
+echo "  savedir:   ${savedir}"
+echo "  savefile:  $savefile"
+echo "  scorefile: $scorefile"
+echo "  prefix:    $prefix"
+echo "  bindir:    $bindir"
+echo "  mandir:    $mandir"
+echo "  docdir:    $docdir"
+case "$default_language" in
+    1) default_language_name=ja ;;
+    2) default_language_name=en ;;
+    *) default_language_name=auto ;;
+esac
+echo "  language:  $default_language_name"
+echo "  wizard:    $enable_wizard"
+echo
+echo "Now run: make"

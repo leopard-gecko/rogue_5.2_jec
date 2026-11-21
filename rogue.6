@@ -1,0 +1,343 @@
+.TH ROGUE 6 "1 April 1981"
+.UC 4
+.SH NAME
+rogue \- Exploring The Dungeons of Doom
+.SH SYNOPSIS
+.B rogue
+[
+.I save_file
+|
+.B -r
+|
+.B -s
+]
+.SH DESCRIPTION
+.PP
+.I Rogue
+is a computer fantasy game with a new twist.  It is crt oriented and the
+object of the game is to survive the attacks of various monsters and get
+a lot of gold, rather than the puzzle solving orientation of most computer
+fantasy games.
+.PP
+To get started you really only need to know two commands.  The command
+.B ?
+will give you a list of the available commands and the command
+.B /
+will identify the things you see on the screen.
+.PP
+To win the game (as opposed to merely playing to beat other people high
+scores) you must locate the Amulet of Yendor which is somewhere below
+the 20th level of the dungeon and get it out.  Nobody has achieved this
+yet and if somebody does, they will probably go down in history as a hero
+among heroes.
+.PP
+When the game ends, either by your death, when you quit, or if you (by
+some miracle) manage to win,
+.I rogue
+will give you a list of the top-ten scorers.  The scoring is based entirely
+upon how much gold you get.  There is a 10% penalty for getting yourself
+killed.
+.PP
+For more detailed directions, read the supplied Markdown guides
+.B rogue.md
+(English) and
+.B rogue_jp.md
+(Japanese).
+.SH FILES
+.PP
+This macOS/Linux build lets the executable name and related file names be selected
+at build time.  The recommended method is to run the supplied
+.B configure
+script before
+.BR make .
+
+.PP
+A normal configured build is:
+.PP
+.RS
+.nf
+./configure
+make
+.fi
+.RE
+.PP
+The configure script detects a C compiler and a usable curses library.  It
+tries
+.BR ncursesw ,
+.BR ncurses ,
+and then
+.B curses
+in that order.
+.PP
+After building, the program, man page, and documents can be installed with:
+.PP
+.RS
+.nf
+./configure --program=rogue52 --prefix=/usr/local
+make
+make install
+.fi
+.RE
+.PP
+The default install layout is:
+.PP
+.RS
+.nf
+/usr/local/bin/rogue52
+/usr/local/share/man/man6/rogue52.6
+/usr/local/share/doc/rogue52/README.md
+/usr/local/share/doc/rogue52/README_mac_linux_ja.md
+/usr/local/share/doc/rogue52/LICENSE.TXT
+/usr/local/share/doc/rogue52/rogue.md
+/usr/local/share/doc/rogue52/rogue_jp.md
+.fi
+.RE
+.PP
+The install locations can be changed with
+.BR --prefix ,
+.BR --bindir ,
+.BR --mandir ,
+and
+.BR --docdir .
+For package builds,
+.B DESTDIR
+is supported:
+.PP
+.RS
+.nf
+make DESTDIR=/tmp/package-root install
+.fi
+.RE
+.PP
+Installed files for the current configuration can be removed with:
+.PP
+.RS
+.nf
+make uninstall
+.fi
+.RE
+.PP
+The install target does not create save or score files themselves.
+If
+.B --file-dir=DIR
+was used with configure,
+.B make install
+creates that directory so the runtime files can be written there later.
+Directories named only by
+.BR --savedir ,
+.BR --savefile ,
+or
+.B --scorefile
+are not created automatically.
+.PP
+The executable name and file paths can be configured with:
+.PP
+.RS
+.nf
+./configure --program=rogue52
+./configure --program=rogue52 --savedir=.
+./configure --program=rogue52 --file-dir=.
+./configure --program=rogue52 --savedir='~/Documents'
+./configure --program=rogue52 --file-dir='~/Documents'
+./configure --program=rogue52 --savefile='./rogue52.save'
+./configure --program=rogue52 --scorefile='./rogue52.scr'
+.fi
+.RE
+.PP
+The
+.B --file-dir
+option sets the default save directory and, unless
+.B --scorefile
+is specified, places the score file in the same directory.  An explicit
+.B --savedir
+or
+.B --savefile
+setting takes precedence for saved games; an explicit
+.B --scorefile
+setting takes precedence for scores.  A leading
+.B ~/
+is expanded to the user's home directory.
+When
+.B --file-dir=DIR
+is configured,
+.B make install
+creates
+.I DIR
+only.  It does not create the save or score files.
+
+.PP
+Wizard mode can be enabled at configure time with:
+.PP
+.RS
+.nf
+./configure --enable-wizardmode
+.fi
+.RE
+.PP
+The direct make variables described below remain available for manual builds.
+
+.PP
+By default,
+.PP
+.RS
+.nf
+make
+.fi
+.RE
+.PP
+builds the program as
+.B rogue
+and uses the following files.  The save file is relative to the current
+directory when the game is run:
+.PP
+.RS
+.nf
+./rogue.save
+rogue.scr
+.fi
+.RE
+.PP
+Specifying
+.B PROG
+or
+.B PROGRAM
+changes the executable name and, unless overridden, the default save and score
+file names.  If both are specified,
+.B PROGRAM
+takes precedence:
+.PP
+.RS
+.nf
+make PROG=rogue52
+.fi
+.RE
+.PP
+uses:
+.PP
+.RS
+.nf
+./rogue52.save
+rogue52.scr
+.fi
+.RE
+.PP
+The default save directory can be changed with
+.BR SAVEDIR :
+.PP
+.RS
+.nf
+make PROG=rogue52 SAVEDIR=.
+make PROG=rogue52 SAVEDIR='~/Documents'
+make PROG=rogue52 SAVEDIR=/tmp
+.fi
+.RE
+.PP
+These produce default save files such as:
+.PP
+.RS
+.nf
+./rogue52.save
+~/Documents/rogue52.save
+/tmp/rogue52.save
+.fi
+.RE
+.PP
+The save file itself can also be specified directly with
+.BR SAVEFILE :
+.PP
+.RS
+.nf
+make PROG=rogue52 SAVEFILE=./rogue52.save
+make PROG=rogue52 SAVEFILE='~/Documents/rogue52.save'
+make PROG=rogue52 SAVEFILE=/tmp/rogue52.save
+.fi
+.RE
+.PP
+If
+.B SAVEFILE
+contains a slash, it is treated as a path and is not appended to
+.B SAVEDIR
+or another directory.  By default,
+.B SAVEDIR
+is
+.BR . ,
+so the save file is relative to the current directory when the game is run.  A leading
+.B ~/
+is expanded to the user's home directory by
+.I rogue
+at run time.
+.PP
+The score file path can be changed with
+.BR SCOREFILE :
+.PP
+.RS
+.nf
+make PROG=rogue52 SCOREFILE=/tmp/rogue52.scr
+.fi
+.RE
+.PP
+Relative score file paths are relative to the current directory when the game
+is run.  Concurrent score updates are protected by operating-system locks on
+the score file itself; no separate
+.B .lck
+file is created.  The legacy configure option
+.B --lockfile
+is accepted for compatibility but ignored.
+
+.PP
+Wizard mode can be enabled at build time with:
+.PP
+.RS
+.nf
+make wizard
+.fi
+.RE
+.PP
+This builds the game with
+.B -DWIZARD
+enabled.  Press
+.B Ctrl-P
+during the game to enable wizard mode.
+.PP
+The
+.B wizard
+target accepts the same build-time file-name options, for example:
+.PP
+.RS
+.nf
+make wizard PROG=rogue52
+make wizard PROG=rogue52 SAVEDIR=.
+make wizard PROG=rogue52 SAVEFILE='~/Documents/rogue52.save'
+.fi
+.RE
+.PP
+Extra preprocessor options can also be appended with
+.BR EXTRA_CPPFLAGS ,
+for example:
+.PP
+.RS
+.nf
+make EXTRA_CPPFLAGS='-DWIZARD'
+.fi
+.RE
+
+.SH SEE ALSO
+Michael C. Toy,
+.I "A Guide to the Dungeons of Doom"
+(included as rogue.md and rogue_jp.md)
+.SH BUGS
+.PP
+Probably infinite.  Currently known bugs are: Sometimes you are still hungry
+even after you eat food and sometimes you get a monster on the screen in
+reverse video which may or may not cause a core dump.
+
+This version preserves UTF-8 bytes in string options, so the player name and
+favorite fruit may be specified as UTF-8 text through ROGUEOPTS, for example
+.B ROGUEOPTS='name=Blue Meanie,fruit=apple' .
+The in-game option screen also accepts UTF-8 text for string options such as
+Name, Fruit, and Save file.  Backspace, Delete, Left, and Right edit by UTF-8
+character boundaries, and Japanese characters are treated as double-width for
+cursor placement in the option input field.  IME pre-edit and conversion
+display is handled by the terminal emulator; confirmed UTF-8 text is then
+handled safely by Rogue.  The startup greeting and score list display the
+stored player name as UTF-8.

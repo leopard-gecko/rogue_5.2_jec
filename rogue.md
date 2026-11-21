@@ -1,0 +1,250 @@
+# A Guide to the Dungeons of Doom
+
+Michael C. Toy / Kenneth C. R. C. Arnold
+
+Computer Systems Research Group  
+Department of Electrical Engineering and Computer Science  
+University of California, Berkeley, California 94720
+
+**Abstract**
+
+*Rogue* is a visual CRT-based fantasy game which runs under the UNIX[^unix] timesharing system. This paper describes how to play Rogue and gives a few hints for those who might otherwise get lost in the Dungeons of Doom.
+
+## 1. Introduction
+
+You have just finished your years as a student at the local fighter's guild. After much practice and sweat you have finally completed your training and are ready to embark upon a perilous adventure. As a test of your skills, the local guildmasters have sent you into the Dungeons of Doom. Your task is to return with the Amulet of Yendor. Your reward for the completion of this task will be a full membership in the local guild. In addition, you are allowed to keep all the loot you bring back from the dungeons.
+
+In preparation for your journey, you are given an enchanted mace, a bow, and a quiver of arrows taken from a dragon's hoard in the far off Dark Mountains. You are also outfitted with elf-crafted armor and given enough food to reach the dungeons. You say goodbye to family and friends for what may be the last time and head up the road.
+
+You set out on your way to the dungeons and after several days of uneventful travel, you see the ancient ruins that mark the entrance to the Dungeons of Doom. It is late at night, so you make camp at the entrance and spend the night sleeping under the open skies. In the morning you gather your mace, put on your armor, eat what is almost your last food, and enter the dungeons.
+
+## 2. What is going on here?
+
+You have just begun a game of rogue. Your goal is to grab as much treasure as you can, find the Amulet of Yendor, and get out of the Dungeons of Doom alive. On the screen, a map of where you have been and what you have seen on the current dungeon level is kept. As you explore more of the level, it appears on the screen in front of you.
+
+Rogue differs from most computer fantasy games in that it is screen oriented. Commands are all one or two keystrokes[^keystrokes] and the results of your commands are displayed graphically on the screen rather than being explained in words.
+
+Another major difference between rogue and other computer fantasy games is that once you have solved all the puzzles in a standard fantasy game, it has lost most of its excitement and it ceases to be fun. Rogue, on the other hand, generates a new dungeon every time you play it and even the author finds it an entertaining and exciting game.
+
+## 3. What do all those things on the screen mean?
+
+In order to understand what is going on in rogue you have to first get some grasp of what rogue is doing with the screen. The rogue screen is intended to replace the “You can see...” descriptions of standard fantasy games. Figure 1 is a sample of what a rogue screen might look like.
+
+```text
+                         ------------
+                         |..........+
+                         |..@....]..|
+                         |....B.....|
+                         |..........|
+                         -----+------
+
+Level: 1  Gold: 0      Hp: 12(12)  Str: 16(16)  Ac: 6  Exp: 1/0
+```
+
+Figure 1: Example dungeon screen.
+
+### The bottom line
+
+At the bottom line of the screen are a few pieces of cryptic information describing your current status. Here is an explanation of what these things mean:
+
+| Field | Meaning |
+| --- | --- |
+| Level | This number indicates how deep you have gone in the dungeon. It starts at one and goes up as you go deeper into the dungeon. |
+| Gold | The number of gold pieces you have managed to find and keep with you so far. |
+| Hp | Your current and maximum hit points. Hit points indicate how much damage you can take before you die. The more you get hit in a fight, the lower they get. You can regain hit points by resting. The number in parentheses is the maximum number your hit points can reach. |
+| Str | Your current strength and maximum ever strength. This can be any integer less than or equal to 31, or greater than or equal to three. The higher the number, the stronger you are. The number in the parentheses is the maximum strength you have attained so far this game. |
+| Ac | Your current armor class. This number indicates how effective your armor is in stopping blows from unfriendly creatures. The lower this number is, the more effective the armor. |
+| Exp | These two numbers give your current experience level and experience points. As you do things, you gain experience points. At certain experience point totals, you gain an experience level. The more experienced you are, the better you are able to fight and to withstand magical attacks. |
+
+### The top line
+
+The top line of the screen is reserved for printing messages that describe things that are impossible to represent visually. If you see a “--More--” on the top line, this means that rogue wants to print another message on the screen, but it wants to make certain that you have read the one that is there first. To read the next message, just type a space.
+
+### The rest of the screen
+
+The rest of the screen is the map of the level as you have explored it so far. Each symbol on the screen represents something. Here is a list of what the various symbols mean:
+
+| Symbol | Meaning |
+| --- | --- |
+| @ | This symbol represents you, the adventurer. |
+| -\| | These symbols represent the walls of rooms. |
+| + | A door to/from a room. |
+| . | The floor of a room. |
+| # | The floor of a passage between rooms. |
+| * | A pile or pot of gold. |
+| ) | A weapon of some sort. |
+| ] | A piece of armor. |
+| ! | A flask containing a magic potion. |
+| ? | A piece of paper, usually a magic scroll. |
+| = | A ring with magic properties |
+| / | A magical staff or wand |
+| ^ | A trap, watch out for these. |
+| % | A staircase to other levels |
+| : | A piece of food. |
+| A-Z | The uppercase letters represent the various inhabitants of the Dungeons of Doom. Watch out, they can be nasty and vicious. |
+
+## 4. Commands
+
+Commands are given to rogue by typing one or two characters. Most commands can be preceded by a count to repeat them (e.g. typing `10s` will do ten searches). Commands for which counts make no sense have the count ignored. To cancel a count or a prefix, type Escape. The list of commands is rather long, but it can be read at any time during the game with the `?` command. Normal movement uses lowercase keys, running uses uppercase keys, and `f` plus a direction is the special run-until-interesting command; Ctrl-direction movement is not part of this edition. Here it is for reference, with a short explanation of each command.
+
+| Command | Description |
+| --- | --- |
+| ? | The help command. Asks for a character to give help on. If you type a `*`, it will list all the commands, otherwise it will explain what the character you typed does. |
+| / | This is the “What is that on the screen?” command. A `/` followed by any character that you see on the level, will tell you what that character is. For instance, typing `/@` will tell you that the `@` symbol represents you, the player. |
+| h, H | Move left. You move one space to the left. If you use upper case `H`, you will continue to move left until you run into something. This works for all movement commands (e.g. `L` means run in direction `l` ) |
+| j | Move down. |
+| k | Move up. |
+| l | Move right. |
+| y | Move diagonally up and left. |
+| u | Move diagonally up and right. |
+| b | Move diagonally down and left. |
+| n | Move diagonally down and right. |
+| t | Throw an object. This is a prefix command. When followed with a direction it throws an object in the specified direction. (e.g. type `th` to throw something to the left.) |
+| f | Find prefix. When followed by a direction it means to continue moving in the specified direction until you pass something interesting or run into a wall. You should experiment with this, since it is a very useful command, but very difficult to describe. |
+| z | Zap prefix. Point a staff or wand in a given direction and fire it. Even non-directional staves must be pointed in some direction to be used. |
+| ^ | Identify trap command. If a trap is on your map and you can't remember what type it is, you can get rogue to remind you by getting next to it and typing `^` followed by the direction that would move you on top of it. |
+| s | Search for traps and secret doors. Examine each space immediately adjacent to you for the existence of a trap or secret door. There is a large chance that even if there is something there, you won't find it, so you might have to search a while before you find something. |
+| > | Climb down a staircase to the next level. Not surprisingly, this can only be done if you are standing on staircase. |
+| < | Climb up a staircase to the level above. This can't be done without the Amulet of Yendor in your possession. |
+| . | Rest. This is the “do nothing” command. This is good for waiting and healing. |
+| i | Inventory. List what you are carrying in your pack. |
+| I | Selective inventory. Tells you what a single item in your pack is. |
+| q | Quaff one of the potions you are carrying. |
+| r | Read one of the scrolls in your pack. |
+| e | Eat food from your pack. |
+| w | Wield a weapon. Take a weapon out of your pack and carry it for use in combat, replacing the one you are currently using (if any). |
+| W | Wear armor. You can only wear one suit of armor at a time. This takes extra time. |
+| T | Take armor off. You can't remove armor that is cursed. This takes extra time. |
+| P | Put on a ring. You can wear only two rings at a time (one on each hand). If you aren't wearing any rings, this command will ask you which hand you want to wear it on, otherwise, it will place it on the unused hand. The program assumes that you wield your sword in your right hand. |
+| R | Remove a ring. If you are only wearing one ring, this command takes it off. If you are wearing two, it will ask you which one you wish to remove, |
+| d | Drop an object. Take something out of your pack and leave it lying on the floor. Only one object can occupy each space. You cannot drop a cursed object at all if you are wielding or wearing it. |
+| c | Call an object something. If you have a type of object in your pack which you wish to remember something about, you can use the call command to give a name to that type of object. This is usually used when you figure out what a potion, scroll, ring, or staff is after you pick it up. (See the `askme` option below.) |
+| D | Print out which things you've discovered something about. This command will ask you what type of thing you are interested in. If you type the character for a given type of object (e.g. `!` for potion) it will tell you which kinds of that type of object you've discovered (i.e., figured out what they are). This command works for potions, scrolls, rings, and staves and wands. |
+| o | Examine and set options. This command is further explained in the section on options. |
+| ^L | Redraws the screen. Useful if spurious messages or transmission errors have messed up the display. |
+| ^R | Repeat last message. Useful when a message disappears before you can read it. This only repeats the last message that was not a mistyped command so that you don't lose anything by accidentally typing the wrong character instead of ^R. |
+| Escape | Cancel a command, prefix, or count. |
+| ! | Escape to a shell for some commands. |
+| Q | Quit. Leave the game. |
+| S | Save the current game in a file. It will ask you whether you wish to use the default save file. *Caveat:* Rogue won't let you start up a copy of a saved game, and it removes the save file as soon as you start up a restored game. This is to prevent people from saving a game just before a dangerous position and then restarting it if they die. To restore a saved game, give the file name as an argument to rogue. For a named save use `rogue save_file`; to restore the default save use `rogue -r`. |
+
+| v | Prints the program version number. |
+
+## 5. Rooms
+
+Rooms in the dungeons are either lit or dark. If you walk into a lit room, the entire room will be drawn on the screen as soon as you enter. If you walk into a dark room, it will only be displayed as you explore it. Upon leaving a room, all objects inside the room which might move or be removed are erased from the screen. In the darkness you can only see one space in all directions around you. A corridor is always dark.
+
+## 6. Fighting
+
+If you see a monster and you wish to fight it, just attempt to run into it. Many times a monster you find will mind its own business unless you attack it. It is often the case that discretion is the better part of valor.
+
+## 7. Objects you can find
+
+When you find something in the dungeon, it is common to want to pick the object up. This is accomplished in rogue by walking over the object. If you are carrying too many things, the program will tell you and it won't pick up the object, otherwise it will add it to your pack and tell you what you just picked up.
+
+Many of the commands that operate on objects must prompt you to find out which object you want to use. If you change your mind and don't want to do that command after all, just type an Escape and the command will be aborted.
+
+Some objects, like armor and weapons, are easily differentiated. Others, like scrolls and potions, are given labels which vary according to type. During a game, any two of the same kind of object with the same label are the same type. However, the labels will vary from game to game.
+
+When you use one of these labeled objects, if its effect is obvious, rogue will remember what it is for you. If it's effect isn't extremely obvious, you can use the `call` command (see above) or the `askme` option (see below) to scribble down something about it so you will recognize it later.
+
+### Weapons
+
+Some weapons, like arrows, come in bunches, but most come one at a time. In order to use a weapon, you must wield it. To fire an arrow out of a bow, you must first wield the bow, then throw the arrow. You can only wield one weapon at a time, but you can't change weapons if the one you are currently wielding is cursed.
+
+### Armor
+
+There are various sorts of armor lying around in the dungeon. Some of it is enchanted, some is cursed, and some is just normal. Different armor types have different armor classes. The lower the armor class, the more protection the armor affords against the blows of monsters. Here is a list of the various armor types and their normal armor class:
+
+| Type | Armor class |
+| --- | ---: |
+| None | 10 |
+| Leather armor | 8 |
+| Studded leather / Ring mail | 7 |
+| Scale mail | 6 |
+| Chain mail | 5 |
+| Banded mail / Splint mail | 4 |
+| Plate mail | 3 |
+
+If a piece of armor is enchanted, its armor class will be lower than normal. If a suit of armor is cursed, its armor class will be higher, and you will not be able to remove it. However, not all armor with a class that is higher than normal is cursed.
+
+### Scrolls
+
+Scrolls come with titles in an unknown tongue. After you read a scroll, it disappears from your pack.
+
+### Potions
+
+Potions are labeled by the color of the liquid inside the flask. They disappear after being quaffed.
+
+### Staves and Wands
+
+Staves and wands do the same kinds of things. Staves are identified by a type of wood; wands by a type of metal or bone. They are generally things you want to do to something over a long distance, so you must point them at what you wish to affect to use them. Some staves are not affected by the direction they are pointed, though. Staves come with multiple magic charges, the number being random, and when they are used up, the staff is just a piece of wood or metal.
+
+### Rings
+
+Rings are very useful items, since they are relatively permanent magic, unlike the usually fleeting effects of potions, scrolls, and staves. Of course, the bad rings are also more powerful. Most rings also cause you to use up food more rapidly, the rate varying with the type of ring. Rings are differentiated by their stone settings.
+
+## 8. Options
+
+Due to variations in personal tastes and conceptions of the way rogue should do things, there are a set of options you can set that cause rogue to behave in various different ways.
+
+### Setting the options
+
+There are two ways to set the options. The first is with the `o` command of rogue; the second is with the `ROGUEOPTS` environment variable[^version6].
+
+#### Using the `o` command
+
+When you type `o` in rogue, it clears the screen and displays the current settings for all the options. It then places the cursor by the value of the first option and waits for you to type. You can type a Return which means to go to the next option, a `-` which means to go to the previous option, an Escape which means to return to the game, or you can give the option a value. For boolean options this merely involves typing `t` for true or `f` for false. For string options, type the new value followed by Return. For the language option, type `J` for Japanese or `E` for English.
+
+#### Using the ROGUEOPTS variable
+
+The ROGUEOPTS variable is a string containing a comma separated list of initial values for the various options. Boolean variables can be turned on by listing their name or turned off by putting a `no` in front of the name. Thus to set up an environment variable so that **jump** is on, **terse** is off, and the **name** is set to “Blue Meanie”, use the command
+
+```sh
+$ export ROGUEOPTS="jump,noterse,name=Blue Meanie"
+```
+
+The original example used the C shell `setenv` syntax.[^shell]
+
+### Option list
+
+Here is a list of the options and an explanation of what each one is for. The default value for each is enclosed in square brackets. String options accept UTF-8 in this edition. Their input limits depend on the field and are enforced without splitting multibyte characters.
+
+| Option | Description |
+| --- | --- |
+| terse [noterse] | Useful for those who are tired of the sometimes lengthy messages of rogue. This is a useful option for playing on slow terminals, so this option defaults to **terse** if you are on a slow (1200 baud or under) terminal. |
+| jump [nojump] | If this option is set, running moves will not be displayed until you reach the end of the move. This saves considerable cpu and display time. This option defaults to **jump** if you are using a slow terminal. |
+| step [nostep] | When **step** is set, lists of things, like inventories or `*` responses to “Which item do you wish to ...?” questions, are displayed one item at a time on the top of the screen, rather than clearing the screen, displaying the list, then re-displaying the dungeon level. |
+| flush [noflush] | All typeahead is thrown away after each round of battle. This is useful for those who type far ahead and then watch in dismay as a Kobold kills them. |
+| askme [askme] | Upon reading a scroll or quaffing a potion which does not automatically identify itself upon use, rogue will ask you what to name it so you can recognize it if you encounter it again. |
+| passgo [passgo] | Follow turnings in passageways. If you run in a passage and you run into stone or a wall, rogue will see if it can turn to the right or left. If it can only turn one way, it will turn that way. If it can turn either or neither, it will stop. This is followed strictly, which can sometimes lead to slightly confusing occurrences (which is why the original game defaults to off). This edition enables `passgo` by default. The `f` prefix still works. |
+| color [color] | Enable terminal colors. The A–Z monsters use the colors from the Rogue 5.2 D&D-inspired color study; the floor has a black background and doors use the wall color. Use `nocolor` for the original monochrome appearance. On terminals without sufficient color support, monochrome is used automatically. |
+| name [account name] | This is the name of your character. It is used if you get on the top ten scorer's list. |
+| fruit [slime-mold] | This should hold the name of a fruit that you enjoy eating. It is basically a whimsey that the program uses in a couple of places. |
+| language [auto] | Choose the display language at startup using `ROGUEOPTS=language=ja`, `ROGUEOPTS=language=en`, or `ROGUEOPTS=language=auto`. `auto` follows the operating-system locale. In the in-game options screen, `J` selects Japanese and `E` selects English. |
+| file [PROGRAM.save] | The default save file name is derived from the executable name (e.g. `rogue52.save` for `rogue52`), normally in the current directory. If your connection is interrupted, Rogue will attempt an automatic save here. The file name may contain the special character `~` which expands to be your home directory. |
+
+## 9. Scoring
+
+Rogue usually maintains a list of the top ten scoring people on your machine. Some installations limit each account on the machine to post only one non-winning score on this list, however this is no longer considered the default behavior. If you score higher than someone else on this list, or better your previous score on the list, you will be inserted in the proper place under your current name.
+
+If you quit the game, you get out with all of your gold intact. If, however, you get killed in the Dungeons of Doom, your body is forwarded to your next-of-kin, along with 90% of your gold; ten percent of your gold is kept by the Dungeons' wizard as a fee. This should make you consider whether you want to take one last hit at that monster and possibly live, or quit and thus stop with whatever you have. If you quit, you do get all your gold, but if you swing and live, you might find more.
+
+If you just want to see what the current top ten list is, you can type
+
+```sh
+% rogue -s
+```
+
+## 10. Acknowledgements
+
+Rogue was originally conceived of by Glenn Wichman and Michael Toy. Ken Arnold and Michael Toy then smoothed out the user interface, and added jillions of new features. We would like to thank Bob Arnold, Michelle Busch, Andy Hatcher, Kipp Hickman, Mark Horton, Daniel Jensen, Bill Joy, Joe Kalash, Steve Maurer, Marty McNary, Jan Miller, and Scott Nelson for their ideas and assistance, and also the teeming multitudes who graciously ignored work, school, and social life to play rogue and send us bugs, complaints, suggestions, and just plain flames. And also Mom.
+
+---
+
+English text converted from the original `rogue.me` and updated for the Japanese/English Rogue 5.2 edition by leopardgecko.
+
+[^unix]: UNIX is a trademark of Bell Laboratories.
+[^keystrokes]: As opposed to pseudo-English sentences.
+[^version6]: On Version 6 systems, there is no equivalent of the ROGUEOPTS feature.
+[^shell]: For the Bourne shell, the original document uses `ROGUEOPTS="jump,noterse,name=Blue Meanie"` followed by `export ROGUEOPTS`.

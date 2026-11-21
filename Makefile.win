@@ -1,0 +1,144 @@
+# Native Windows build for MSYS2 UCRT64 and PDCursesMod (VT only).
+# Run in the UCRT64 shell; ./configure is not needed on Windows.
+# pacman -S --needed make mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-pdcurses
+CC := gcc
+WINDRES ?= windres
+MINGW_PREFIX ?= /ucrt64
+ifneq ($(origin PDC_BACKEND),undefined)
+$(error PDC_BACKEND was removed; Windows uses the VT backend)
+endif
+PROG ?=
+PROGRAM ?= $(if $(PROG),$(PROG),rogue)
+DISTNAME ?= rogue52_004
+DEFAULT_LANGUAGE ?= 0
+DEFAULT_COLOR ?= 1
+DEFAULT_CURSOR ?= 0
+DEFAULT_PASSGO ?= 1
+DEFAULT_ASKME ?= 1
+SAVEDIR ?= .
+SAVEFILE ?= $(PROGRAM).save
+SCOREFILE ?= $(PROGRAM).scr
+CFLAGS ?= -O2 -std=gnu89 -Wall -Wextra
+LDFLAGS ?=
+EXTRA_CPPFLAGS ?=
+USER_CPPFLAGS := $(CPPFLAGS)
+# Quote the full -D argument to preserve spaces in default file paths.
+shell_quote = '$(subst ','"'"',$(1))'
+CPPFLAGS := -I. -I$(MINGW_PREFIX)/include/pdcurses -DPDC_WIDE=1 \
+            -DPDC_FORCE_UTF8=1 -DDEFAULT_LANGUAGE=$(DEFAULT_LANGUAGE) \
+            -DDEFAULT_COLOR=$(DEFAULT_COLOR) -DDEFAULT_CURSOR=$(DEFAULT_CURSOR) \
+            -DDEFAULT_PASSGO=$(DEFAULT_PASSGO) -DDEFAULT_ASKME=$(DEFAULT_ASKME) \
+            -DDEFAULT_SAVEDIR=$(call shell_quote,"$(SAVEDIR)") \
+            -DDEFAULT_SAVEFILE=$(call shell_quote,"$(SAVEFILE)") \
+            -DSCOREFILE=$(call shell_quote,"$(SCOREFILE)") \
+            $(USER_CPPFLAGS) $(EXTRA_CPPFLAGS)
+# Keep the compiler's built-in Windows/PDCurses flags even with CPPFLAGS=...
+override CPPFLAGS := $(CPPFLAGS)
+LDLIBS := -lpdcurses_vt -lwinmm -luser32 -lgdi32 -lshell32 -lcomdlg32 -ladvapi32
+CFILES := vers.c extern.c armor.c chase.c command.c daemon.c daemons.c \
+          fight.c init.c io.c jec/language.c jec/unicode_text.c jec/color.c \
+          list.c main.c misc.c monsters.c move.c new_level.c options.c \
+          pack.c passages.c potions.c rings.c rip.c rooms.c save.c scrolls.c \
+          state.c sticks.c things.c weapons.c wizard.c xcrypt.c mdport.c \
+          mach_dep.c windows/rogue_windows.c
+OBJS := $(CFILES:.c=.win.o)
+ICON_OBJ := windows/rogue-icon.win.o
+HDRS := rogue.h extern.h jec/language.h jec/unicode_text.h jec/color.h windows/rogue_windows.h
+.PHONY: all clean original japanese english wizard show-config dist.src dist.win _dist.win
+all: $(PROGRAM).exe
+%.win.o: %.c $(HDRS) .win-build-settings
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+# Rebuild objects when the option defaults or compile settings are changed.
+.PHONY: FORCE
+.win-build-settings: FORCE
+	@printf '%s\n' '$(CC)|$(CFLAGS)|$(CPPFLAGS)|$(LDFLAGS)|$(LDLIBS)' > .win-build-settings.tmp
+	@{ IFS= read -r current < .win-build-settings.tmp; \
+	   if test -r "$@" && IFS= read -r previous < "$@" && test "$$current" = "$$previous"; then \
+	       rm -f .win-build-settings.tmp; \
+	   else mv .win-build-settings.tmp "$@"; fi; }
+# A single icon resource is shared by standard and original-settings builds.
+# -I windows lets the resource script use its local rogue.ico filename.
+$(ICON_OBJ): windows/rogue-icon.rc windows/rogue.ico
+	$(WINDRES) -I windows -i windows/rogue-icon.rc -O coff -o $@
+$(PROGRAM).exe: $(OBJS) $(ICON_OBJ)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(ICON_OBJ) $(LDLIBS)
+clean:
+	rm -f $(OBJS) $(ICON_OBJ) .win-build-settings .win-build-settings.tmp $(PROGRAM).exe
+japanese:
+	$(MAKE) -f Makefile.win clean
+	$(MAKE) -f Makefile.win all PROGRAM=$(PROGRAM) DEFAULT_LANGUAGE=1
+english:
+	$(MAKE) -f Makefile.win clean
+	$(MAKE) -f Makefile.win all PROGRAM=$(PROGRAM) DEFAULT_LANGUAGE=2
+original:
+	$(MAKE) -f Makefile.win clean
+	$(MAKE) -f Makefile.win all PROGRAM=$(PROGRAM) \
+          DEFAULT_LANGUAGE=$(if $(filter command line,$(origin DEFAULT_LANGUAGE)),$(DEFAULT_LANGUAGE),2) \
+          DEFAULT_COLOR=$(if $(filter command line,$(origin DEFAULT_COLOR)),$(DEFAULT_COLOR),0) \
+          DEFAULT_CURSOR=$(if $(filter command line,$(origin DEFAULT_CURSOR)),$(DEFAULT_CURSOR),1) \
+          DEFAULT_PASSGO=$(if $(filter command line,$(origin DEFAULT_PASSGO)),$(DEFAULT_PASSGO),0) \
+          DEFAULT_ASKME=$(if $(filter command line,$(origin DEFAULT_ASKME)),$(DEFAULT_ASKME),0)
+wizard:
+	$(MAKE) -f Makefile.win clean
+	$(MAKE) -f Makefile.win all PROGRAM=$(PROGRAM) EXTRA_CPPFLAGS="$(EXTRA_CPPFLAGS) -DWIZARD"
+show-config:
+	@echo 'Windows VT: -DPDC_WIDE=1 -DPDC_FORCE_UTF8=1'
+	@echo 'PROGRAM=$(PROGRAM) DEFAULT_LANGUAGE=$(DEFAULT_LANGUAGE) DEFAULT_COLOR=$(DEFAULT_COLOR) DEFAULT_CURSOR=$(DEFAULT_CURSOR) DEFAULT_PASSGO=$(DEFAULT_PASSGO) DEFAULT_ASKME=$(DEFAULT_ASKME)'
+# A published Windows package contains two separately built executables.
+# Ordinary make still creates rogue.exe.  The package uses rogue52.exe and
+# rogue52_original.exe by default; PROGRAM=/PROG= rename both together.
+# Both executables share the same saved game and score file names.
+DIST_PROGRAM = $(if $(filter command line,$(origin PROGRAM)),$(PROGRAM),$(if $(filter command line,$(origin PROG)),$(PROG),rogue52))
+DIST_ORIGINAL = $(DIST_PROGRAM)_original
+
+# Rebuild both variants from clean objects.  Renaming a normal executable
+# would preserve its compiled-in defaults, so each variant must be compiled.
+# Explicit, shared SAVEFILE/SCOREFILE values also prevent the original build
+# from silently using <name>_original.save and <name>_original.scr.
+dist.win:
+	@case "$(DIST_PROGRAM)" in \
+	  ''|*[!A-Za-z0-9_-]*) echo 'dist.win: PROGRAM/PROG must be an ASCII filename stem (letters, digits, _ or -).' >&2; exit 1 ;; \
+	esac
+	@command -v zip >/dev/null 2>&1 || { \
+	  echo "dist.win requires zip: pacman -S --needed zip" >&2; exit 1; }
+	@$(MAKE) -f Makefile.win _dist.win PROGRAM="$(DIST_PROGRAM)"
+
+_dist.win:
+	@$(MAKE) -f Makefile.win clean PROGRAM="$(PROGRAM)"
+	@$(MAKE) -f Makefile.win all PROGRAM="$(PROGRAM)" \
+	  SAVEDIR=. SAVEFILE="$(PROGRAM).save" SCOREFILE="$(PROGRAM).scr" \
+	  DEFAULT_LANGUAGE=0 DEFAULT_COLOR=1 DEFAULT_CURSOR=0 DEFAULT_PASSGO=1 DEFAULT_ASKME=1 EXTRA_CPPFLAGS=
+	@$(MAKE) -f Makefile.win clean PROGRAM="$(PROGRAM)_original"
+	@$(MAKE) -f Makefile.win all PROGRAM="$(PROGRAM)_original" \
+	  SAVEDIR=. SAVEFILE="$(PROGRAM).save" SCOREFILE="$(PROGRAM).scr" \
+	  DEFAULT_LANGUAGE=2 DEFAULT_COLOR=0 DEFAULT_CURSOR=1 DEFAULT_PASSGO=0 DEFAULT_ASKME=0 EXTRA_CPPFLAGS=
+	@set -eu; \
+	  tmp=$$(mktemp -d "$${TMPDIR:-/tmp}/rogue52-win.XXXXXX"); \
+	  trap 'rm -rf "$$tmp"' 0; \
+	  stage="$$tmp/$(DISTNAME)-windows"; \
+	  mkdir -p "$$stage"; \
+	  cp "$(PROGRAM).exe" "$(PROGRAM)_original.exe" "$$stage/"; \
+	  cp LICENSE.TXT "$$stage/"; \
+	  for guide in rogue_ja.txt rogue_en.txt; do \
+	    sed \
+	      -e 's|rogue\.exe|$(PROGRAM).exe|g' \
+	      -e 's|rogue -r|$(PROGRAM).exe -r|g' \
+	      -e 's|rogue -s|$(PROGRAM).exe -s|g' \
+	      -e 's|rogue save_file|$(PROGRAM).exe save_file|g' \
+	      -e 's|rogue セーブファイル名|$(PROGRAM).exe セーブファイル名|g' \
+	      -e 's|PROGRAM\.save|$(PROGRAM).save|g' \
+	      -e 's|rogue\.save|$(PROGRAM).save|g' \
+	      "$$guide" > "$$stage/$$guide"; \
+	  done; \
+	  for lang in ja en; do \
+	    sed -e 's|@ORIGINAL_PROGRAM@|$(PROGRAM)_original|g' \
+	        -e 's|@PROGRAM@|$(PROGRAM)|g' \
+	        -e 's|@DISTNAME@|$(DISTNAME)|g' \
+	        "windows/README_binary_$$lang.txt" > "$$stage/README_$$lang.txt"; \
+	  done; \
+	  (cd "$$tmp" && zip -qr "$$tmp/archive.zip" "$(DISTNAME)-windows"); \
+	  mv -f "$$tmp/archive.zip" "$(CURDIR)/$(DISTNAME)-windows.zip"; \
+	  echo "Created $(DISTNAME)-windows.zip (both standard and original-settings executables)"
+
+dist.src:
+	$(MAKE) -f Makefile ROGUE_BUILD=unix dist.src
