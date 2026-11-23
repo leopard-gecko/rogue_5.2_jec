@@ -1,4 +1,4 @@
-# Rogue 5.2 JEC 004 — Windows (English)
+# Rogue 5.2 JEC 005 — Windows (English)
 
 This document explains how to build and run Rogue 5.2 JEC on **Windows 10 / 11**, including environment variables and save and score files. For an introduction and the list of platform documents, see the [repository README](README.md). For controls, commands, and items, see [A Guide to the Dungeons of Doom](rogue.md).
 
@@ -124,7 +124,7 @@ pacman -S --needed zip
 make dist.win
 ```
 
-This produces **`rogue52_004-windows.zip`**, containing the standard executable `rogue52.exe`, original-settings `rogue52_original.exe`, Japanese and English end-user READMEs, the Japanese and English plain-text dungeon guides (`rogue_ja.txt` / `rogue_en.txt`), and `LICENSE.TXT`. The two EXEs are built separately with different option defaults, but share their save/score filenames. Both executables embed the same Windows icon.
+This produces **`rogue52_005-windows.zip`**. Extracting it creates a top-level **`Rogue 5.2`** folder containing the standard executable `rogue52.exe`, original-settings `rogue52_original.exe`, Japanese and English end-user READMEs, the Japanese and English plain-text dungeon guides (`rogue_ja.txt` / `rogue_en.txt`), and `LICENSE.TXT`. The two EXEs are built separately with different option defaults, but share their save/score filenames. Both executables embed the same Windows icon.
 
 ```sh
 make dist.win PROGRAM=rogue52
@@ -132,7 +132,7 @@ make dist.win PROGRAM=rogue52
 
 To change the EXE names, use `PROGRAM=NAME` (or `PROG=NAME`). The distribution then contains `NAME.exe` and `NAME_original.exe`, both using `NAME.save` and `NAME.scr`. Command examples in the packaged READMEs and guides are updated automatically without modifying the source documents.
 
-To package the source, run `make dist.src` (creates **`rogue52_004-src.tar.gz`**).
+To package the source, run `make dist.src` (creates **`rogue52_005-src.tar.gz`**).
 
 | File | Purpose |
 |---|---|

@@ -1,4 +1,4 @@
-# Rogue 5.2 JEC 004 — macOS / Linux（日本語）
+# Rogue 5.2 JEC 005 — macOS / Linux（日本語）
 
 この文書では、**macOS、Linux、Raspberry Pi OS**でのビルド、起動、インストール、セーブ・スコアの保存先について説明します。ゲームの紹介とOS別の文書一覧は[リポジトリのREADME](README.md)、操作方法やアイテムの説明は[「【運命の洞窟】への案内書」](rogue_jp.md)をご覧ください。
 
@@ -127,7 +127,7 @@ make
 | `rogue_ja.txt` / `rogue_en.txt` | 日英案内書（固定幅TXT） |
 | `*.c` / `*.h` | ソースコード |
 
-ほかのOS向けREADMEは[リポジトリのREADME](README.md)から参照してください。`make dist.src` でソース配布用の **`rogue52_004-src.tar.gz`** を生成できます。ソース配布にはローカルのセーブ・スコアや `config.mk` は入りません。
+ほかのOS向けREADMEは[リポジトリのREADME](README.md)から参照してください。`make dist.src` でソース配布用の **`rogue52_005-src.tar.gz`** を生成できます。ソース配布にはローカルのセーブ・スコアや `config.mk` は入りません。
 
 ## 7. 著作権・ライセンス
 

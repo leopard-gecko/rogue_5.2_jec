@@ -24,6 +24,22 @@
 #include <unistd.h>
 #endif
 
+/* Finish curses before resetting the cursor shape: PDCursesMod's
+ * endwin() selects a blinking block after the normal visibility
+ * changes.  Portable builds still call plain endwin(). */
+int rogue_endwin(void)
+{
+    int result = endwin();
+#ifdef _WIN32
+    if (result != ERR)
+    {
+        jrogue_windows_cursor_invalidate();
+        jrogue_windows_restore_cursor_shape();
+    }
+#endif
+    return result;
+}
+
 /*
  * Clear the plain terminal after curses has returned control to it.
  * In a macOS Terminal alternate-screen session, endwin() can expose
@@ -106,6 +122,10 @@ more_col(void)
 
     prompt_width = rogue_display_width(JSTR(" --続く--", " --More--"));
     maxcol = COLS - prompt_width;
+#ifdef _WIN32
+    if (maxcol > 0)
+        --maxcol; /* Leave the final terminal cell unused. */
+#endif
     if (maxcol < 0)
 	maxcol = 0;
     if (mpos > maxcol)
@@ -325,7 +345,9 @@ void show_win(WINDOW * scr, char * message)
 {
     mvwaddstr(scr, 0, 0, message);
     touchwin(scr);
+#ifndef _WIN32
     wmove(scr, hero.y, hero.x);
+#endif
     wrefresh(scr);
     w_wait_for(scr,' ');
     clearok(curscr, TRUE);

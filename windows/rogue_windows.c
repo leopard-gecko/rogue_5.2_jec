@@ -20,6 +20,8 @@
 #include <string.h>
 #include <wchar.h>
 #include "rogue.h"
+#undef wrefresh
+#undef refresh
 #include "rogue_windows.h"
 #include "jec/language.h"
 #include "jec/unicode_text.h"
@@ -89,6 +91,145 @@ jrogue_windows_console_init(void)
     }
     (void)SetConsoleOutputCP(CP_UTF8);
     (void)SetConsoleCP(CP_UTF8);
+}
+
+
+/* PDCursesMod VT calls PDC_curs_set(2) when endwin() closes the screen,
+ * and curs_set(1) selects an underline during ordinary gameplay.
+ * DECSCUSR 0 restores the terminal profile's default cursor shape.
+ * Restore it AFTER curses has emitted its own shape change. */
+static void
+jrogue_windows_cursor_vt(const char *sequence, size_t length)
+{
+    const DWORD vt_flags = ENABLE_PROCESSED_OUTPUT |
+                           ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode, written;
+    int changed_mode = FALSE;
+
+    if (output == NULL || output == INVALID_HANDLE_VALUE)
+        return;
+
+    if (GetConsoleMode(output, &mode))
+    {
+        if ((mode & vt_flags) != vt_flags)
+        {
+            if (!SetConsoleMode(output, mode | vt_flags))
+                return;
+            changed_mode = TRUE;
+        }
+        /* Preserve the order of CRT/PDCurses output and Win32 VT writes. */
+        (void)fflush(stdout);
+        (void)WriteFile(output, sequence, (DWORD)length, &written, NULL);
+        if (changed_mode)
+            (void)SetConsoleMode(output, mode);
+    }
+    else
+    {
+        /* mintty and similar ANSI PTYs can expose stdout as a pipe.
+         * Never send cursor controls into a redirected regular file. */
+        const char *term = getenv("TERM");
+        if (GetFileType(output) == FILE_TYPE_PIPE && term != NULL &&
+            (strncmp(term, "xterm", 5) == 0 ||
+             strncmp(term, "screen", 6) == 0 ||
+             strncmp(term, "tmux", 4) == 0 ||
+             strncmp(term, "rxvt", 4) == 0 ||
+             strncmp(term, "cygwin", 6) == 0))
+        {
+            (void)fwrite(sequence, 1, length, stdout);
+            (void)fflush(stdout);
+        }
+    }
+}
+
+void
+jrogue_windows_restore_cursor_shape(void)
+{
+    static const char reset[] = "\033[0 q";
+    jrogue_windows_cursor_vt(reset, sizeof reset - 1);
+}
+
+/* Cache the current requested visibility. The game uses this rather than
+ * show_cursor (the option's preference) while input dialogs temporarily show
+ * the cursor. The cache is invalidated whenever curses exits screen mode. */
+static int jrogue_windows_cursor_visible = -1;
+static int jrogue_windows_first_refresh_pending = TRUE;
+
+void
+jrogue_windows_cursor_invalidate(void)
+{
+    jrogue_windows_cursor_visible = -1;
+    jrogue_windows_first_refresh_pending = TRUE;
+}
+
+void
+jrogue_windows_show_cursor(int show)
+{
+    show = show ? TRUE : FALSE;
+    if (jrogue_windows_cursor_visible != show)
+    {
+        (void)curs_set(show ? 1 : 0);
+        jrogue_windows_cursor_visible = show;
+        /* PDCursesMod assigns an underline for curs_set(1); override it
+         * only when the visibility changes, not on every game turn. */
+        if (show)
+            jrogue_windows_restore_cursor_shape();
+    }
+}
+
+int
+jrogue_windows_refresh(WINDOW *win)
+{
+    static const char hide[] = "\033[?25l";
+    static const char show_default[] = "\033[?25h\033[0 q";
+    int returning_from_endwin = isendwin();
+    int visible = jrogue_windows_cursor_visible;
+    int result;
+
+    if (visible < 0)
+        visible = show_cursor ? TRUE : FALSE;
+
+    /* A VT renderer moves the physical cursor around while painting. Hide
+     * only the *physical* cursor: do not disturb PDCurses' logical cursor
+     * position or visibility via curs_set() during a refresh. */
+    if (visible || returning_from_endwin)
+        jrogue_windows_cursor_vt(hide, sizeof hide - 1);
+
+    result = wrefresh(win); /* Actual PDCurses call (this file undefines the wrapper). */
+
+    /* 5.4.5 JEC startup fix: after the first paint, allow any deferred
+     * palette redraw scheduled by init_color() to complete. Do this before
+     * supplementary UTF-8 painting so late palette updates cannot erase it. */
+    if (result != ERR && jrogue_windows_first_refresh_pending)
+    {
+        (void)napms(0);
+        jrogue_windows_first_refresh_pending = FALSE;
+    }
+
+    /* In the option/inventory window, repaint UTF-8 supplementary scalars
+     * before making the cursor visible again. This also avoids a transient
+     * cursor jump while the PDCursesMod VT glyph workaround is running. */
+    if (result != ERR && win == hw)
+    {
+        (void)fflush(stdout);
+        jrogue_windows_option_vt_restore_nonbmp(win);
+    }
+
+    if (returning_from_endwin && result != ERR)
+    {
+        /* reset_prog_mode() may have overwritten visibility and shape as
+         * part of wrefresh(); apply our option after that internal reset. */
+        jrogue_windows_cursor_visible = -1;
+        jrogue_windows_show_cursor(visible);
+    }
+
+    /* Restore physical visibility even when painting fails, so a failed
+     * wrefresh() cannot leave the terminal cursor permanently hidden. */
+    if (visible)
+        jrogue_windows_cursor_vt(show_default, sizeof show_default - 1);
+    else
+        jrogue_windows_cursor_vt(hide, sizeof hide - 1);
+    return result;
 }
 
 char *
@@ -822,9 +963,9 @@ jrogue_windows_option_vt_restore_nonbmp(WINDOW *win)
         }
     /* PDCurses already positioned the cursor.  Do not emit redundant VT
      * cursor movement when the option screen contains no emoji. */
+    (void)wmove(win, cur_y, cur_x);
     if (!repainted)
         return;
-    (void)wmove(win, cur_y, cur_x);
     {
         int n = snprintf(output, sizeof output, "\033[%d;%dH",
                          beg_y + cur_y + 1, beg_x + cur_x + 1);

@@ -1,4 +1,4 @@
-# Rogue 5.2 JEC 004 — Windows（日本語）
+# Rogue 5.2 JEC 005 — Windows（日本語）
 
 この文書では、**Windows 10 / 11**向けのビルド、起動、環境変数、セーブ・スコアの保存先について説明します。ゲームの紹介と各OS向け文書の一覧は[リポジトリのREADME](README.md)、操作方法やアイテムの説明は[「【運命の洞窟】への案内書」](rogue_jp.md)をご覧ください。
 
@@ -124,7 +124,7 @@ pacman -S --needed zip
 make dist.win
 ```
 
-既定では **`rogue52_004-windows.zip`** を生成します。ZIP内には通常版 `rogue52.exe`、オリジナル設定版 `rogue52_original.exe`、日英の利用者用README、日英のTXT案内書（`rogue_ja.txt` / `rogue_en.txt`）、`LICENSE.TXT` が収録されます。2つの実行ファイルはそれぞれ異なる初期設定で再コンパイルされます。セーブ・スコア名は共通です。両方のEXEには同じアイコンが埋め込まれます。
+既定では **`rogue52_005-windows.zip`** を生成します。展開すると最上位に **`Rogue 5.2`** フォルダが作成されます。このフォルダには通常版 `rogue52.exe`、オリジナル設定版 `rogue52_original.exe`、日英の利用者用README、日英のTXT案内書（`rogue_ja.txt` / `rogue_en.txt`）、`LICENSE.TXT` が収録されます。2つの実行ファイルはそれぞれ異なる初期設定で再コンパイルされます。セーブ・スコア名は共通です。両方のEXEには同じアイコンが埋め込まれます。
 
 ```sh
 make dist.win PROGRAM=rogue52
@@ -132,7 +132,7 @@ make dist.win PROGRAM=rogue52
 
 `PROGRAM=NAME`（または `PROG=NAME`）で実行ファイル名を変更すると、通常版は `NAME.exe`、オリジナル設定版は `NAME_original.exe` となり、共通のデータ名は `NAME.save` と `NAME.scr` に変わります。配布READMEと案内書の起動例も自動変更されます。元の文書は変更されません。
 
-ソース配布用アーカイブは `make dist.src` で生成します（**`rogue52_004-src.tar.gz`**）。
+ソース配布用アーカイブは `make dist.src` で生成します（**`rogue52_005-src.tar.gz`**）。
 
 | ファイル | 用途 |
 |---|---|

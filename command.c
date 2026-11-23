@@ -17,6 +17,9 @@
 #include <string.h>
 #include "rogue.h"
 #include "jec/color.h"
+#ifdef _WIN32
+#include "windows/rogue_windows.h"
+#endif
 
 shint countch, direction, newcount = FALSE;
 
@@ -54,7 +57,11 @@ void command(void)
 	if (!((running || count) && jump))
 	{
             jrogue_restore_cursor();
+#ifdef _WIN32
+	    jrogue_windows_refresh(stdscr);	/* Draw without cursor flicker */
+#else
 	    refresh();			/* Draw screen */
+#endif
 	    if (running)
 		md_delay(ROGUE_ANIMATION_DELAY_MS);
 	}
@@ -213,7 +220,7 @@ void command(void)
 			move(LINES-1, 0); 
 			clrtoeol();
 			refresh();
-			endwin();
+			rogue_endwin();
 			rogue_clear_plain_screen();
 			exit(0);
 		    }

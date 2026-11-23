@@ -76,10 +76,9 @@ option_waddstr(WINDOW *win, const char *s)
 static void
 option_refresh(WINDOW *win)
 {
+    /* Windows wraps refresh and the UTF-8 repaint together so
+     * the visible cursor cannot flicker between the two. */
     wrefresh(win);
-#ifdef _WIN32
-    jrogue_windows_option_vt_restore_nonbmp(win);
-#endif
 }
 
 OPTION	optlist[] = {

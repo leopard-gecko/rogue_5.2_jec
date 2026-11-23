@@ -7,6 +7,11 @@
 #include <sys/stat.h>
 #include <wchar.h>
 void jrogue_windows_console_init(void);  /* before the first initscr() */
+/* Windows VT cursor-style restoration and redraw handling. */
+void jrogue_windows_restore_cursor_shape(void);
+void jrogue_windows_cursor_invalidate(void);
+void jrogue_windows_show_cursor(int show);
+int jrogue_windows_refresh(WINDOW *win);
 void jrogue_windows_init_palette(void);   /* after start_color() */
 char *jrogue_windows_rogueopts_utf8(void); /* allocated; caller frees */
 char *jrogue_windows_username_utf8(void); /* allocated; caller frees */

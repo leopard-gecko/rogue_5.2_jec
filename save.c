@@ -418,7 +418,7 @@ void auto_save(int sig)
 
     if (file_name[0] != '\0' && (savef = md_save_fopen(file_name)) != NULL)
 	save_file(savef);
-    endwin();
+    rogue_endwin();
     exit(1);
 }
 
@@ -471,7 +471,7 @@ restore_abort(int inf, int screen_started)
     if (screen_started)
     {
         jrogue_show_cursor(TRUE);
-        endwin();
+        rogue_endwin();
     }
     if (inf >= 0)
         (void)close(inf);

@@ -715,6 +715,7 @@ void ring_off(void);
 int gethand(void);
 int ring_eat(int hand);
 char * ring_num(THING * obj);
+int rogue_endwin(void);
 void rogue_clear_plain_screen(void);
 void score(int amount, int flags, char monst);
 void death(char monst);
@@ -867,6 +868,22 @@ char * xcrypt(const char *key, const char *setting);
 
 #ifndef PATH_MAX
 #define PATH_MAX _MAX_PATH
+#endif
+
+/* Route every Windows curses refresh through one cursor-safe path,
+ * including the initial dungeon, --More--, option, inventory, and help
+ * screens. All Unix/macOS refreshes remain ordinary curses calls.
+ * Place these macros AFTER the curses declarations (included by callers). */
+#ifdef _WIN32
+int jrogue_windows_refresh(WINDOW *win);
+#ifdef refresh
+#undef refresh
+#endif
+#ifdef wrefresh
+#undef wrefresh
+#endif
+#define refresh() jrogue_windows_refresh(stdscr)
+#define wrefresh(win) jrogue_windows_refresh(win)
 #endif
 
 #endif /* ROGUE_52_JEC_ROGUE_H */

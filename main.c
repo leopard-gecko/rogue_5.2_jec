@@ -269,7 +269,7 @@ int main(int argc, char * * argv, char * * envp)
     if (argc == 2)
         if (!restore(argv[1], envp))
         {
-            endwin();
+            rogue_endwin();
             exit(1);
         }
 #endif
@@ -321,7 +321,7 @@ int main(int argc, char * * argv, char * * envp)
     { 
 	printf("%s", JSTR("\n\n端末の横幅が足りません。\n", "\n\nSorry, but your terminal window has too few columns.\n"));
         printf(JSTR("この端末は %d 桁ですが、70 桁必要です。\n", "Your terminal has %d columns, needs 70.\n"), COLS); 
-        endwin(); 
+        rogue_endwin(); 
         exit(1); 
 	} 
 
@@ -329,7 +329,7 @@ int main(int argc, char * * argv, char * * envp)
     { 
         printf("%s", JSTR("\n\n端末の行数が足りません。\n", "\n\nSorry, but your terminal window has too few lines.\n")); 
         printf(JSTR("この端末は %d 行ですが、22 行必要です。\n", "Your terminal has %d lines, needs 22.\n"), LINES); 
-        endwin(); 
+        rogue_endwin(); 
         exit(1); 
     } 
  
@@ -406,7 +406,7 @@ void fatal(char * s)
     printw("%s", s);
     refresh();
     jrogue_show_cursor(TRUE);
-    endwin();
+    rogue_endwin();
     (void) exit(0);
 }
 
@@ -446,7 +446,7 @@ void tstp(int a)
     getyx(curscr, oy, ox);
     mvcur(0, COLS - 1, LINES - 1, 0);
     jrogue_show_cursor(TRUE);
-    endwin();
+    rogue_endwin();
     /* Give the calling shell its own colors while this process is stopped. */
     jrogue_color_terminal_restore();
     clearok(curscr, TRUE);
@@ -565,7 +565,7 @@ void leave(int sig)
     {*/
 	mvcur(0, COLS - 1, LINES - 1, 0);
         jrogue_show_cursor(TRUE);
-	endwin();
+	rogue_endwin();
     /* } */
     putchar('\n');
     exit(0);
@@ -583,7 +583,7 @@ void shell(void)
     move(LINES-1, 0);
     refresh();
     jrogue_show_cursor(TRUE);
-    endwin();
+    rogue_endwin();
     putchar('\n');
     putchar('\n');
     in_shell = TRUE;
@@ -596,7 +596,17 @@ void shell(void)
     noecho();
     crmode();
     in_shell = FALSE;
+#ifndef _WIN32
     jrogue_restore_cursor();
+#endif
     clearok(stdscr, TRUE);
     touchwin(stdscr);
+#ifdef _WIN32
+    /* PDCursesMod restores its saved cursor during the first refresh
+     * after endwin().  Do not call curs_set() before that refresh:
+     * it could be overwritten by reset_prog_mode(). */
+    move(hero.y, hero.x);
+    if (jrogue_windows_refresh(stdscr) == ERR)
+        jrogue_restore_cursor();
+#endif
 }

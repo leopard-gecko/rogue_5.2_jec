@@ -13,6 +13,9 @@
 #include <curses.h>
 #include "rogue.h"
 #include "jec/color.h"
+#ifdef _WIN32
+#include "windows/rogue_windows.h"
+#endif
 
 bool after;				/* True if we want after daemons */
 bool noscore;				/* Was a wizard sometime */
@@ -55,7 +58,11 @@ bool wizard = FALSE;			/* True if allows wizard commands */
 void
 jrogue_show_cursor(int show)
 {
+#ifdef _WIN32
+    jrogue_windows_show_cursor(show);
+#else
     (void)curs_set(show ? 1 : 0);
+#endif
 }
 
 void

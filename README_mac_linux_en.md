@@ -1,4 +1,4 @@
-# Rogue 5.2 JEC 004 — macOS / Linux (English)
+# Rogue 5.2 JEC 005 — macOS / Linux (English)
 
 This document explains how to build, run, and install Rogue 5.2 JEC on **macOS, Linux, and Raspberry Pi OS**, including save and score file locations. For an introduction and links to platform-specific documentation, see the [repository README](README.md). For controls, items, and game options, see [A Guide to the Dungeons of Doom](rogue.md).
 
@@ -127,7 +127,7 @@ Individual paths can be selected with `--savefile=PATH` and `--scorefile=PATH`; 
 | `rogue_en.txt` / `rogue_ja.txt` | English and Japanese fixed-width TXT guides |
 | `*.c` / `*.h` | Source code |
 
-For other platform documentation, see the [repository README](README.md). Run `make dist.src` to create the **`rogue52_004-src.tar.gz`** source distribution; local saves, scores, and `config.mk` are not included.
+For other platform documentation, see the [repository README](README.md). Run `make dist.src` to create the **`rogue52_005-src.tar.gz`** source distribution; local saves, scores, and `config.mk` are not included.
 
 ## 7. Copyright and license
 

@@ -9,7 +9,7 @@ $(error PDC_BACKEND was removed; Windows uses the VT backend)
 endif
 PROG ?=
 PROGRAM ?= $(if $(PROG),$(PROG),rogue)
-DISTNAME ?= rogue52_004
+DISTNAME ?= rogue52_005
 DEFAULT_LANGUAGE ?= 0
 DEFAULT_COLOR ?= 1
 DEFAULT_CURSOR ?= 0
@@ -90,6 +90,8 @@ show-config:
 # Both executables share the same saved game and score file names.
 DIST_PROGRAM = $(if $(filter command line,$(origin PROGRAM)),$(PROGRAM),$(if $(filter command line,$(origin PROG)),$(PROG),rogue52))
 DIST_ORIGINAL = $(DIST_PROGRAM)_original
+# Root directory inside the Windows distribution ZIP (not the ZIP filename).
+DIST_FOLDER := Rogue 5.2
 
 # Rebuild both variants from clean objects.  Renaming a normal executable
 # would preserve its compiled-in defaults, so each variant must be compiled.
@@ -115,7 +117,7 @@ _dist.win:
 	@set -eu; \
 	  tmp=$$(mktemp -d "$${TMPDIR:-/tmp}/rogue52-win.XXXXXX"); \
 	  trap 'rm -rf "$$tmp"' 0; \
-	  stage="$$tmp/$(DISTNAME)-windows"; \
+	  stage="$$tmp/$(DIST_FOLDER)"; \
 	  mkdir -p "$$stage"; \
 	  cp "$(PROGRAM).exe" "$(PROGRAM)_original.exe" "$$stage/"; \
 	  cp LICENSE.TXT "$$stage/"; \
@@ -136,7 +138,7 @@ _dist.win:
 	        -e 's|@DISTNAME@|$(DISTNAME)|g' \
 	        "windows/README_binary_$$lang.txt" > "$$stage/README_$$lang.txt"; \
 	  done; \
-	  (cd "$$tmp" && zip -qr "$$tmp/archive.zip" "$(DISTNAME)-windows"); \
+	  (cd "$$tmp" && zip -qr "$$tmp/archive.zip" "$(DIST_FOLDER)"); \
 	  mv -f "$$tmp/archive.zip" "$(CURDIR)/$(DISTNAME)-windows.zip"; \
 	  echo "Created $(DISTNAME)-windows.zip (both standard and original-settings executables)"
 

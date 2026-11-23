@@ -22,7 +22,7 @@ else ifeq ($(ROGUE_BUILD),unix)
 # See LICENSE.TXT for copyright and licensing information.
 #
 
-DISTNAME = rogue52_004
+DISTNAME = rogue52_005
 
 HDRS = rogue.h extern.h jec/language.h jec/unicode_text.h jec/color.h windows/rogue_windows.h
 # The source manifest is authoritative. Derive objects from it so the build

@@ -263,7 +263,7 @@ void score(int amount, int flags, char monst)
         move(LINES - 1, 0);
         clrtoeol();
         refresh();
-        endwin();
+        rogue_endwin();
     }
 #ifdef WIZARD
     if (wizard)
