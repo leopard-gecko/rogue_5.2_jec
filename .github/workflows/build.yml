@@ -78,7 +78,7 @@ jobs:
         run: |
           make dist.win
           mkdir -p dist
-          cp rogue52.exe rogue52_original.exe rogue52_004-windows.zip dist/
+          cp rogue52.exe rogue52_original.exe rogue52_*-windows.zip dist/
           objdump -p rogue52.exe | grep 'DLL Name:' || true
           objdump -p rogue52_original.exe | grep 'DLL Name:' || true
 
