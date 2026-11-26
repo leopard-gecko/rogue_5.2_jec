@@ -70,6 +70,7 @@ jobs:
           install: >-
             make
             zip
+            unzip
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-binutils
             mingw-w64-ucrt-x86_64-pdcurses
@@ -78,11 +79,11 @@ jobs:
         run: |
           make dist.win
           mkdir -p dist
-          cp rogue52.exe rogue52_original.exe rogue52_*-windows.zip dist/
+          unzip -q rogue52_*-windows.zip -d dist/
           objdump -p rogue52.exe | grep 'DLL Name:' || true
           objdump -p rogue52_original.exe | grep 'DLL Name:' || true
 
-      - name: Upload Windows binaries and ZIP
+      - name: Upload Windows distribution
         uses: actions/upload-artifact@v6
         with:
           name: rogue52-windows-x64
